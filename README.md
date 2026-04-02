@@ -10,6 +10,10 @@ A classic Snake game implemented using Godot 4 engine.
 - Responsive controls
 - Simple and clean UI
 
+## Play Online
+
+You can play the game online at: [https://zml9167.github.io/snake/Snake.html](https://zml9167.github.io/snake/Snake.html)
+
 ## Project Structure
 
 ```
