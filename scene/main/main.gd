@@ -18,6 +18,9 @@ func _ready() -> void:
 	snake.size = snake_size
 	grid = viewport_size / snake_size
 	max_len = grid.x * grid.y
+	var init_direction = snake.SnakeDirection.RIGHT
+	var init_position = viewport_size / 2 + Vector2(snake_size_half, -snake_size_half)
+	snake.spawn(init_direction, init_position)
 
 
 func position2index(pos: Vector2) -> int:
@@ -74,8 +77,5 @@ func _on_hud_reset_game() -> void:
 
 
 func _on_hud_start_game() -> void:
-	var init_direction = snake.SnakeDirection.RIGHT
-	var init_position = viewport_size / 2 + Vector2(snake_size_half, -snake_size_half)
-	snake.spawn(init_direction, init_position)
 	spawn_food()
 	food.show()
