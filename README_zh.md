@@ -10,6 +10,10 @@
 - 响应式控制
 - 简洁清晰的界面
 
+## 在线体验
+
+在线体验地址：[https://zml9167.github.io/snake/Snake.html](https://zml9167.github.io/snake/Snake.html)
+
 ## 项目结构
 
 ```
