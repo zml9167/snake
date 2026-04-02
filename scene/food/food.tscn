@@ -1,11 +1,6 @@
 [gd_scene format=3 uid="uid://ca11d80nr768n"]
 
-[ext_resource type="Script" uid="uid://dqdovm7ms8a8b" path="res://scene/food/food.gd" id="1_t754j"]
+[ext_resource type="Texture2D" uid="uid://dj6nw05244wxx" path="res://assets/food.png" id="1_t754j"]
 
-[sub_resource type="QuadMesh" id="QuadMesh_4x0hx"]
-size = Vector2(20, 20)
-
-[node name="Food" type="MeshInstance2D" unique_id=585523389]
-modulate = Color(0, 0, 0, 1)
-mesh = SubResource("QuadMesh_4x0hx")
-script = ExtResource("1_t754j")
+[node name="Food" type="Sprite2D" unique_id=1364070936]
+texture = ExtResource("1_t754j")

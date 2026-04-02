@@ -3,7 +3,7 @@ extends Node
 signal game_over
 signal game_win
 
-var snake_size := 20
+@export var snake_size := 20
 var snake_size_half = snake_size / 2.0
 var grid: Vector2i
 var max_len: int
@@ -16,9 +16,6 @@ var grow_up_num := 1
 
 func _ready() -> void:
 	snake.size = snake_size
-	var init_direction = snake.SnakeDirection.RIGHT
-	var init_position = viewport_size / 2 + Vector2(snake_size_half, -snake_size_half)
-	snake.spawn(init_direction, init_position)
 	grid = viewport_size / snake_size
 	max_len = grid.x * grid.y
 
@@ -77,5 +74,8 @@ func _on_hud_reset_game() -> void:
 
 
 func _on_hud_start_game() -> void:
+	var init_direction = snake.SnakeDirection.RIGHT
+	var init_position = viewport_size / 2 + Vector2(snake_size_half, -snake_size_half)
+	snake.spawn(init_direction, init_position)
 	spawn_food()
 	food.show()

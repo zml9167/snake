@@ -1,11 +1,7 @@
 [gd_scene format=3 uid="uid://dwdaht2dq7oy5"]
 
-[ext_resource type="Script" uid="uid://bm5ho8w7ggj4y" path="res://scene/snake/body.gd" id="1_fu3ku"]
+[ext_resource type="Texture2D" uid="uid://7j10a2y546qu" path="res://assets/snake_header.png" id="1_fu3ku"]
 
-[sub_resource type="QuadMesh" id="QuadMesh_s2mqb"]
-size = Vector2(20, 20)
-
-[node name="Header" type="MeshInstance2D" unique_id=1904325550]
+[node name="Header" type="Sprite2D" unique_id=325266188]
 z_index = 1
-mesh = SubResource("QuadMesh_s2mqb")
-script = ExtResource("1_fu3ku")
+texture = ExtResource("1_fu3ku")

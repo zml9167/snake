@@ -6,9 +6,9 @@ signal collision
 enum SnakeDirection {UP, RIGHT, DOWN, LEFT}
 
 @export var init_length := 1
-@export var size := 20
 @export var speed := 100.0
 @export var self_collision := true
+@export var size := 20
 
 var positions := PackedVector2Array([])
 var nodes := []
@@ -43,7 +43,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func spawn_body(pos: Vector2):
 	var body_instance = body.instantiate()
-	body_instance.size = size
 	body_instance.position = pos
 	add_child(body_instance)
 	nodes.append(body_instance)
@@ -53,7 +52,6 @@ func spawn_body(pos: Vector2):
 func spawn(init_direction: SnakeDirection, init_position: Vector2):
 	var header_instance = header.instantiate()
 	header_instance.position = init_position
-	header_instance.size = size
 	add_child(header_instance)
 	positions.append(init_position)
 	nodes.append(header_instance)
@@ -66,7 +64,7 @@ func spawn(init_direction: SnakeDirection, init_position: Vector2):
 	elif init_direction == SnakeDirection.RIGHT:
 		direction = Vector2.RIGHT
 	for i in range(init_length):
-		spawn_body(init_position - (i+1) * direction * size)
+		spawn_body(init_position - (i+1) * direction * 20)
 
 
 func stop():
