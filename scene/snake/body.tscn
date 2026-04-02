@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://df51nsvpfkege"]
+
+[ext_resource type="Script" uid="uid://bm5ho8w7ggj4y" path="res://scene/snake/body.gd" id="1_k4pu1"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_f13rh"]
+size = Vector2(20, 20)
+
+[node name="Body" type="MeshInstance2D" unique_id=1817545267]
+mesh = SubResource("QuadMesh_f13rh")
+script = ExtResource("1_k4pu1")
+color = Color(1, 1, 1, 1)

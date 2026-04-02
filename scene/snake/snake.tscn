@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://mdpxpf316d0u"]
+
+[ext_resource type="Script" uid="uid://c1v1j88e1pvkl" path="res://scene/snake/snake.gd" id="1_naqwu"]
+[ext_resource type="PackedScene" uid="uid://dwdaht2dq7oy5" path="res://scene/snake/header.tscn" id="2_eutb6"]
+[ext_resource type="PackedScene" uid="uid://df51nsvpfkege" path="res://scene/snake/body.tscn" id="3_6tv36"]
+
+[node name="Snake" type="Node" unique_id=846112595]
+script = ExtResource("1_naqwu")
+header = ExtResource("2_eutb6")
+body = ExtResource("3_6tv36")
+
+[node name="Timer" type="Timer" parent="." unique_id=762786264]
+wait_time = 0.5
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

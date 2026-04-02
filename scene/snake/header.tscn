@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://dwdaht2dq7oy5"]
+
+[ext_resource type="Script" uid="uid://bm5ho8w7ggj4y" path="res://scene/snake/body.gd" id="1_fu3ku"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_s2mqb"]
+size = Vector2(20, 20)
+
+[node name="Header" type="MeshInstance2D" unique_id=1904325550]
+z_index = 1
+mesh = SubResource("QuadMesh_s2mqb")
+script = ExtResource("1_fu3ku")

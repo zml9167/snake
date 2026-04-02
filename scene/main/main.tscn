@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://bnfy3i1hquo1s"]
+
+[ext_resource type="Script" uid="uid://butg5tr3c3ek0" path="res://scene/main/main.gd" id="1_am8c5"]
+[ext_resource type="PackedScene" uid="uid://mdpxpf316d0u" path="res://scene/snake/snake.tscn" id="2_0imob"]
+[ext_resource type="PackedScene" uid="uid://ca11d80nr768n" path="res://scene/food/food.tscn" id="2_6vuhr"]
+[ext_resource type="PackedScene" uid="uid://ok7xv2xv4a8a" path="res://scene/hud/hud.tscn" id="4_a0c6e"]
+
+[node name="Main" type="Node" unique_id=1900588563]
+script = ExtResource("1_am8c5")
+
+[node name="Snake" parent="." unique_id=846112595 instance=ExtResource("2_0imob")]
+
+[node name="HUD" parent="." unique_id=1121453610 instance=ExtResource("4_a0c6e")]
+
+[node name="Food" parent="." unique_id=585523389 instance=ExtResource("2_6vuhr")]
+visible = false
+
+[connection signal="game_over" from="." to="Snake" method="_on_main_game_over"]
+[connection signal="game_over" from="." to="HUD" method="_on_main_game_over"]
+[connection signal="game_win" from="." to="Snake" method="_on_main_game_win"]
+[connection signal="game_win" from="." to="HUD" method="_on_main_game_win"]
+[connection signal="collision" from="Snake" to="." method="_on_snake_collision"]
+[connection signal="move_done" from="Snake" to="." method="_on_snake_move_done"]
+[connection signal="reset_game" from="HUD" to="." method="_on_hud_reset_game"]
+[connection signal="start_game" from="HUD" to="." method="_on_hud_start_game"]
+[connection signal="start_game" from="HUD" to="Snake" method="_on_hud_start_game"]
