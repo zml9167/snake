@@ -17,7 +17,7 @@ var grow_up_num := 1
 func _ready() -> void:
 	snake.size = snake_size
 	var init_direction = snake.SnakeDirection.RIGHT
-	var init_position = viewport_size / 2 + Vector2(snake_size_half, snake_size_half - snake_size)
+	var init_position = viewport_size / 2 + Vector2(snake_size_half, -snake_size_half)
 	snake.spawn(init_direction, init_position)
 	grid = viewport_size / snake_size
 	max_len = grid.x * grid.y
@@ -39,6 +39,7 @@ func index2position(index: int):
 func spawn_food():
 	var idle_arr = PackedInt32Array(range(max_len))
 	if not idle_arr:
+		game_win.emit()
 		return
 	for pos in snake.positions:
 		idle_arr.erase(position2index(pos))
@@ -61,7 +62,7 @@ func _on_snake_move_done(value: Vector2) -> void:
 			game_over.emit()
 	if is_equal_approx(value.x, food.position.x) && is_equal_approx(value.y, food.position.y):
 		snake.grow_up(grow_up_num)
-		if len(snake.nodes) > max_len:
+		if len(snake.nodes) >= max_len:
 			game_win.emit()
 			return
 		spawn_food()

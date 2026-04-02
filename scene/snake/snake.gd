@@ -19,15 +19,15 @@ var body := preload("res://scene/snake/body.tscn")
 
 
 func _process(_delta: float) -> void:
-	var new_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	if not new_direction:
+	var input_vector = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if not input_vector:
 		normal_speed()
 		return
-	if new_direction == direction:
+	if input_vector == direction:
 		speed_up()
 	else:
 		normal_speed()
-	next_direction = new_direction
+	next_direction = input_vector
 	
 
 func _unhandled_input(event: InputEvent) -> void:
