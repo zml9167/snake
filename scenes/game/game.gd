@@ -2,6 +2,12 @@ extends Node2D
 
 @export var self_collision: bool = true
 
+const BASE_INTERVAL := 0.5      # 初始每步耗时（秒）
+const MIN_INTERVAL := 0.1       # 速度上限（Timer 单帧最多触发一次，别低于 ~0.05）
+const STEP_PER_FOOD := 0.01     # 每吃一个食物缩短的秒数
+const BOOST_SCALE := 0.5        # 按住加速键时的间隔倍率
+const START_LENGTH := 2         # 初始蛇长
+
 @onready var viewport_size = get_viewport().get_visible_rect().size
 @onready var timer: Timer = $Timer
 @onready var snake: Node2D = $Snake
@@ -13,6 +19,8 @@ var direction = Vector2.RIGHT
 var next_direction = Vector2.ZERO
 var food_node: MeshInstance2D
 var grid: GameGrid
+var is_game_over: bool = false
+var boost: bool = false
 
 var start_index: int
 var mesh: Mesh
@@ -49,14 +57,31 @@ func _ready() -> void:
 	snake_nodes[0].modulate = Color()
 	init_food()
 	spawn_food()
+	timer.wait_time = _tick_interval()
+	timer.start()
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	if Input.is_action_pressed("speed_up"):
-		timer.wait_time = 0.5
-	else:
-		timer.wait_time = 1
+func _process(_delta: float) -> void:
+	if is_game_over:
+		return
+
+	var pressed := Input.is_action_pressed("speed_up")
+	if pressed != boost:
+		boost = pressed
+
+	var interval := _tick_interval()
+	if not is_equal_approx(timer.wait_time, interval):
+		timer.wait_time = interval
+
+
+# 当前每步耗时：基础值随蛇长递减，按住加速键再乘倍率，最后夹到下限
+func _tick_interval() -> float:
+	var grown := maxi(snake_nodes.size() - START_LENGTH, 0)
+	var interval := BASE_INTERVAL - grown * STEP_PER_FOOD
+	if boost:
+		interval *= BOOST_SCALE
+	return maxf(interval, MIN_INTERVAL)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -108,9 +133,7 @@ func spawn_food():
 		if i not in excluded:
 			candidates.append(i)
 	if candidates.is_empty():
-		print('finish')
-		await get_tree().create_timer(2)
-		get_tree().change_scene_to_file("res://scenes/main/main.tscn")
+		_end_game("finish")
 		return
 
 	var random = candidates.pick_random()
@@ -118,6 +141,9 @@ func spawn_food():
 
 
 func _on_timer_timeout() -> void:
+	if is_game_over:
+		return
+
 	snake_nodes[0].modulate = Color(1,1,1)
 
 	if (
@@ -141,6 +167,24 @@ func _on_timer_timeout() -> void:
 		or node.position.y < grid.offset.y
 		or node.position.y > grid.offset.y + grid.size.y
 	):
-		print('end')
-		await get_tree().create_timer(2)
-		get_tree().change_scene_to_file("res://scenes/main/main.tscn")
+		_end_game("end")
+	elif self_collision and _is_head_on_body():
+		_end_game("self collision")
+
+
+func _is_head_on_body() -> bool:
+	var head_index = grid.position2index(snake_nodes[0].position)
+	for i in range(1, snake_nodes.size()):
+		if grid.position2index(snake_nodes[i].position) == head_index:
+			return true
+	return false
+
+
+func _end_game(reason: String) -> void:
+	if is_game_over:
+		return
+	is_game_over = true
+	timer.stop()
+	print(reason)
+	await get_tree().create_timer(2).timeout
+	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
