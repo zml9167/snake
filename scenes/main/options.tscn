@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://dtdprg0nnvtjs"]
+
+[ext_resource type="Script" uid="uid://cqebsbjthram3" path="res://scenes/main/options.gd" id="1_4r7lc"]
+
+[node name="Options" type="VBoxContainer" unique_id=189374625]
+custom_minimum_size = Vector2(240, 0)
+offset_right = 307.25
+offset_bottom = 50.0
+script = ExtResource("1_4r7lc")
+
+[node name="GridColums" type="HBoxContainer" parent="." unique_id=1841696718]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="GridColums" unique_id=1191201777]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Grid Colums"
+
+[node name="ColumHSlider" type="HSlider" parent="GridColums" unique_id=1611671076]
+custom_maximum_size = Vector2(80, -1)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="Colums" type="Label" parent="GridColums" unique_id=1299679658]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "8"
+
+[node name="GridRows" type="HBoxContainer" parent="." unique_id=1692073519]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="GridRows" unique_id=1937246812]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Grid Rows"
+
+[node name="RowHSlider" type="HSlider" parent="GridRows" unique_id=84656544]
+custom_maximum_size = Vector2(80, -1)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="Rows" type="Label" parent="GridRows" unique_id=491013722]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "24"
+
+[node name="OK" type="Button" parent="." unique_id=129751303]
+layout_mode = 2
+text = "OK"
+
+[connection signal="value_changed" from="GridColums/ColumHSlider" to="." method="_on_colum_h_slider_value_changed"]
+[connection signal="value_changed" from="GridRows/RowHSlider" to="." method="_on_row_h_slider_value_changed"]
+[connection signal="pressed" from="OK" to="." method="_on_ok_pressed"]

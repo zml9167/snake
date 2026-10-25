@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://fv5bca2aesrv"]
+
+[ext_resource type="Script" uid="uid://dqwhuwe3pano0" path="res://autoload/global.gd" id="1_1cbbi"]
+[ext_resource type="Resource" uid="uid://bbvo6oqv6aw0x" path="res://resourse/data/game_config.tres" id="2_bnpfy"]
+
+[node name="Global" type="Node" unique_id=895232649]
+script = ExtResource("1_1cbbi")
+config = ExtResource("2_bnpfy")

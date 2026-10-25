@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://ggapdd7wwlgi"]
+
+[ext_resource type="Script" uid="uid://b5bo6faghs68r" path="res://scenes/game/game.gd" id="1_sul5r"]
+
+[node name="Game" type="Node2D" unique_id=1497943344]
+script = ExtResource("1_sul5r")
+
+[node name="Timer" type="Timer" parent="." unique_id=1241425371]
+autostart = true
+
+[node name="Line2D" type="Line2D" parent="." unique_id=1344959285]
+closed = true
+width = 2.0
+
+[node name="Food" type="Node2D" parent="." unique_id=1954675432]
+
+[node name="Snake" type="Node2D" parent="." unique_id=57457875]
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

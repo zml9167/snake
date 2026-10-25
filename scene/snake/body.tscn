@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://df51nsvpfkege"]
-
-[ext_resource type="Texture2D" uid="uid://6xtmrcjq23u4" path="res://assets/snake_body.png" id="1_k4pu1"]
-
-[node name="Body" type="Sprite2D" unique_id=2126971690]
-texture = ExtResource("1_k4pu1")

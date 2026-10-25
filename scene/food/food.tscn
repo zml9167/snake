@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://ca11d80nr768n"]
-
-[ext_resource type="Texture2D" uid="uid://dj6nw05244wxx" path="res://assets/food.png" id="1_t754j"]
-
-[node name="Food" type="Sprite2D" unique_id=1364070936]
-texture = ExtResource("1_t754j")
