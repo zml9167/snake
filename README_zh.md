@@ -57,4 +57,4 @@ snake/
 
 ## 许可证
 
-MIT 许可证
+本项目基于 [MIT 许可证](LICENSE) 发布。

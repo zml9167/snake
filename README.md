@@ -57,4 +57,4 @@ The project includes **Windows Desktop** and **Web** export presets. In Godot, s
 
 ## License
 
-MIT License
+Released under the [MIT License](LICENSE).
