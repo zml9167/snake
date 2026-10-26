@@ -3,3 +3,6 @@
 .vscode/
 /android/
 export_presets.cfg
+icon.svg.import
+package.json
+package-lock.json
