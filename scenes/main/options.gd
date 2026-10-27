@@ -37,5 +37,5 @@ func _on_row_h_slider_value_changed(value: float) -> void:
 
 
 func _on_ok_pressed() -> void:
-	Global.save_settings(colum_h_slider.value, row_h_slider.value)
+	Global.save_settings(int(colum_h_slider.value), int(row_h_slider.value))
 	options_hide.emit()

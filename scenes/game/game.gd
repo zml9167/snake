@@ -28,8 +28,8 @@ var mesh: Mesh
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	grid = GameGrid.new()
-	grid.colums = Global.config.grid_colums
-	grid.rows = Global.config.grid_rows
+	grid.shape.x = Global.config.grid_colums
+	grid.shape.y = Global.config.grid_rows
 	var cell_width = viewport_size.x / Global.config.grid_colums
 	var cell_height = viewport_size.y / Global.config.grid_rows
 	if cell_width == cell_height:
@@ -46,17 +46,16 @@ func _ready() -> void:
 		grid.offset.y = 0
 	grid.size.x = grid.cell_size * Global.config.grid_colums
 	grid.size.y = grid.cell_size * Global.config.grid_rows
-	draw_boundary()
+	_draw_boundary()
 	grid.total = Global.config.grid_colums * Global.config.grid_rows
 	start_index = grid.position2index(viewport_size / 2)
 	mesh = QuadMesh.new()
 	mesh.size.x = grid.cell_size
 	mesh.size.y = grid.cell_size
-	spawn_snake_node(start_index)
-	spawn_snake_node(start_index - 1)
+	_spawn_snake()
 	snake_nodes[0].modulate = Color()
-	init_food()
-	spawn_food()
+	_init_food()
+	_spawn_food()
 	timer.wait_time = _tick_interval()
 	timer.start()
 
@@ -95,21 +94,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		next_direction = Vector2.DOWN
 
 
-func draw_boundary():
+func _draw_boundary():
 	line_2d.points = PackedVector2Array([
 		grid.offset, grid.offset + Vector2(grid.size.x, 0),
 		grid.offset + Vector2(grid.size.x, 0) + Vector2(0, grid.size.y),
 		grid.offset + Vector2(0, grid.size.y)
 	])
 
-func spawn_snake_node(index: int):
+func _spawn_snake():
+	for i in range(START_LENGTH):
+		_spawn_snake_node(start_index - i)
+
+func _spawn_snake_node(index: int):
 	var instance = MeshInstance2D.new()
 	instance.position = grid.index2position(index)
 	instance.mesh = mesh
 	snake.add_child(instance)
 	snake_nodes.append(instance)
 
-func snake_grow_up(value: int):
+func _snake_grow_up(value: int):
 	for i in range(value):
 		var instance = MeshInstance2D.new()
 		instance.mesh = mesh
@@ -118,13 +121,13 @@ func snake_grow_up(value: int):
 		snake_nodes.append(instance)
 
 
-func init_food():
+func _init_food():
 	food_node = MeshInstance2D.new()
 	food_node.mesh = mesh
 	food.add_child(food_node)
 
 
-func spawn_food():
+func _spawn_food():
 	var excluded = []
 	for node in snake_nodes:
 		excluded.append(grid.position2index(node.position))
@@ -158,8 +161,8 @@ func _on_timer_timeout() -> void:
 	snake_nodes.push_front(node)
 
 	if food_node.position.is_equal_approx(snake_nodes[0].position):
-		spawn_food()
-		snake_grow_up(1)
+		_spawn_food()
+		_snake_grow_up(1)
 
 	if (
 		node.position.x < grid.offset.x
