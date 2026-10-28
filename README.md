@@ -10,7 +10,7 @@ A classic Snake game built with Godot 4 and GDScript. The snake and food are ren
 - Random food placement that avoids the snake
 - Boundary collision and end-of-game handling
 - Keyboard and controller D-pad support
-- Grid layout that adapts to the window size
+- Grid sized and centered from the viewport when the game scene starts; window resizing scales the canvas via the project's `canvas_items` stretch mode
 
 ## Play Online
 
@@ -33,6 +33,8 @@ Play online at: [https://zml9167.github.io/snake/Snake.html](https://zml9167.git
 Select **Option** in the main menu to adjust the number of columns and rows independently. Both values can range from 8 to 16. Click **OK** to save the settings.
 
 The configuration is stored in `user://options.cfg` and loaded automatically the next time the game starts.
+
+The board is laid out once when the game scene starts, using the current viewport size. The project uses `canvas_items` stretch mode, so resizing the window scales the rendered canvas instead of recalculating the grid.
 
 ## Project Structure
 
