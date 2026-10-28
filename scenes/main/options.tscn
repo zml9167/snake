@@ -8,25 +8,24 @@ offset_right = 307.25
 offset_bottom = 50.0
 script = ExtResource("1_4r7lc")
 
-[node name="GridColums" type="HBoxContainer" parent="." unique_id=1841696718]
+[node name="GridColumns" type="HBoxContainer" parent="." unique_id=1841696718]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="GridColums" unique_id=1191201777]
+[node name="Label" type="Label" parent="GridColumns" unique_id=1191201777]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Grid Colums"
+text = "Grid Columns"
 
-[node name="ColumHSlider" type="HSlider" parent="GridColums" unique_id=1611671076]
+[node name="ColumnHSlider" type="HSlider" parent="GridColumns" unique_id=1611671076]
 custom_maximum_size = Vector2(80, -1)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
-[node name="Colums" type="Label" parent="GridColums" unique_id=1299679658]
+[node name="Columns" type="Label" parent="GridColumns" unique_id=1299679658]
 custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 size_flags_horizontal = 8
-text = "8"
 
 [node name="GridRows" type="HBoxContainer" parent="." unique_id=1692073519]
 layout_mode = 2
@@ -46,12 +45,11 @@ size_flags_vertical = 4
 custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 size_flags_horizontal = 8
-text = "24"
 
 [node name="OK" type="Button" parent="." unique_id=129751303]
 layout_mode = 2
 text = "OK"
 
-[connection signal="value_changed" from="GridColums/ColumHSlider" to="." method="_on_colum_h_slider_value_changed"]
+[connection signal="value_changed" from="GridColumns/ColumnHSlider" to="." method="_on_column_h_slider_value_changed"]
 [connection signal="value_changed" from="GridRows/RowHSlider" to="." method="_on_row_h_slider_value_changed"]
 [connection signal="pressed" from="OK" to="." method="_on_ok_pressed"]

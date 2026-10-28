@@ -7,6 +7,7 @@ const MIN_INTERVAL := 0.1       # 速度上限（Timer 单帧最多触发一次�
 const STEP_PER_FOOD := 0.01     # 每吃一个食物缩短的秒数
 const BOOST_SCALE := 0.5        # 按住加速键时的间隔倍率
 const START_LENGTH := 2         # 初始蛇长
+const MAX_QUEUED_DIRECTIONS := 2 # 最多缓存两次转向，避免快速二连转向丢失
 
 @onready var viewport_size = get_viewport().get_visible_rect().size
 @onready var timer: Timer = $Timer
@@ -15,8 +16,8 @@ const START_LENGTH := 2         # 初始蛇长
 @onready var line_2d: Line2D = $Line2D
 
 var snake_nodes: Array[MeshInstance2D] = []
-var direction = Vector2.RIGHT
-var next_direction = Vector2.ZERO
+var direction: Vector2 = Vector2.RIGHT
+var direction_queue: Array[Vector2] = []
 var food_node: MeshInstance2D
 var grid: GameGrid
 var is_game_over: bool = false
@@ -28,9 +29,9 @@ var mesh: Mesh
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	grid = GameGrid.new()
-	grid.shape.x = Global.config.grid_colums
+	grid.shape.x = Global.config.grid_columns
 	grid.shape.y = Global.config.grid_rows
-	var cell_width = viewport_size.x / Global.config.grid_colums
+	var cell_width = viewport_size.x / Global.config.grid_columns
 	var cell_height = viewport_size.y / Global.config.grid_rows
 	if cell_width == cell_height:
 		grid.cell_size = cell_width
@@ -42,12 +43,12 @@ func _ready() -> void:
 		grid.offset.y = (viewport_size.y - grid.cell_size * Global.config.grid_rows) / 2
 	else:
 		grid.cell_size = cell_height
-		grid.offset.x = (viewport_size.x - grid.cell_size * Global.config.grid_colums) / 2
+		grid.offset.x = (viewport_size.x - grid.cell_size * Global.config.grid_columns) / 2
 		grid.offset.y = 0
-	grid.size.x = grid.cell_size * Global.config.grid_colums
+	grid.size.x = grid.cell_size * Global.config.grid_columns
 	grid.size.y = grid.cell_size * Global.config.grid_rows
 	_draw_boundary()
-	grid.cell_count = Global.config.grid_colums * Global.config.grid_rows
+	grid.cell_count = Global.config.grid_columns * Global.config.grid_rows
 	start_index = grid.position2index(viewport_size / 2)
 	mesh = QuadMesh.new()
 	mesh.size.x = grid.cell_size
@@ -60,8 +61,7 @@ func _ready() -> void:
 	timer.start()
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if is_game_over:
 		return
 
@@ -84,14 +84,29 @@ func _tick_interval() -> float:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_game_over:
+		return
+
+	var requested := Vector2.ZERO
 	if event.is_action_pressed("move_left"):
-		next_direction = Vector2.LEFT
+		requested = Vector2.LEFT
 	elif event.is_action_pressed("move_right"):
-		next_direction = Vector2.RIGHT
+		requested = Vector2.RIGHT
 	elif event.is_action_pressed("move_up"):
-		next_direction = Vector2.UP
+		requested = Vector2.UP
 	elif event.is_action_pressed("move_down"):
-		next_direction = Vector2.DOWN
+		requested = Vector2.DOWN
+
+	if requested == Vector2.ZERO:
+		return
+
+	var last_direction := direction
+	if not direction_queue.is_empty():
+		last_direction = direction_queue[-1]
+	if requested == last_direction or (requested + last_direction).is_zero_approx():
+		return
+	if direction_queue.size() < MAX_QUEUED_DIRECTIONS:
+		direction_queue.push_back(requested)
 
 
 func _draw_boundary():
@@ -129,9 +144,10 @@ func _init_food():
 	food_node = MeshInstance2D.new()
 	food_node.mesh = mesh
 	food.add_child(food_node)
+	food.modulate = Color(randf(), randf(), randf())
 
 
-func _spawn_food():
+func _spawn_food() -> bool:
 	var excluded = []
 	for node in snake_nodes:
 		excluded.append(grid.position2index(node.position))
@@ -141,10 +157,12 @@ func _spawn_food():
 			candidates.append(i)
 	if candidates.is_empty():
 		_end_game("finish")
-		return
+		return false
 
 	var random = candidates.pick_random()
 	food_node.position = grid.index2position(random)
+
+	return true
 
 
 func _on_timer_timeout() -> void:
@@ -153,11 +171,11 @@ func _on_timer_timeout() -> void:
 
 	snake_nodes[0].modulate = Color(1,1,1)
 
-	if (
-		not next_direction.is_zero_approx()
-		and not (next_direction + direction).is_zero_approx()
-	):
-		direction = next_direction
+	while not direction_queue.is_empty():
+		var next: Vector2 = direction_queue.pop_front()
+		if not (next + direction).is_zero_approx():
+			direction = next
+			break
 
 	var node = snake_nodes.pop_back()
 	node.position = snake_nodes[0].position + direction * grid.cell_size
@@ -165,7 +183,8 @@ func _on_timer_timeout() -> void:
 	snake_nodes.push_front(node)
 
 	if food_node.position.is_equal_approx(snake_nodes[0].position):
-		_spawn_food()
+		if not _spawn_food():
+			return
 		_snake_grow_up(1)
 
 	if (
