@@ -3,7 +3,7 @@ class_name GameGrid
 var shape: Vector2i
 var cell_size: float
 var offset: Vector2
-var total: int
+var cell_count: int
 var size: Vector2
 
 func index2position(index: int):

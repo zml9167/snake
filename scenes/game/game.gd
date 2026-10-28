@@ -47,7 +47,7 @@ func _ready() -> void:
 	grid.size.x = grid.cell_size * Global.config.grid_colums
 	grid.size.y = grid.cell_size * Global.config.grid_rows
 	_draw_boundary()
-	grid.total = Global.config.grid_colums * Global.config.grid_rows
+	grid.cell_count = Global.config.grid_colums * Global.config.grid_rows
 	start_index = grid.position2index(viewport_size / 2)
 	mesh = QuadMesh.new()
 	mesh.size.x = grid.cell_size
@@ -101,24 +101,28 @@ func _draw_boundary():
 		grid.offset + Vector2(0, grid.size.y)
 	])
 
+
 func _spawn_snake():
 	for i in range(START_LENGTH):
 		_spawn_snake_node(start_index - i)
+
+
+func _snake_add_node(instance: MeshInstance2D):
+	snake.add_child(instance)
+	snake_nodes.append(instance)
+
 
 func _spawn_snake_node(index: int):
 	var instance = MeshInstance2D.new()
 	instance.position = grid.index2position(index)
 	instance.mesh = mesh
-	snake.add_child(instance)
-	snake_nodes.append(instance)
+	_snake_add_node(instance)
+
 
 func _snake_grow_up(value: int):
 	for i in range(value):
-		var instance = MeshInstance2D.new()
-		instance.mesh = mesh
-		instance.position = snake_nodes[-1].position
-		snake.add_child(instance)
-		snake_nodes.append(instance)
+		var instance = snake_nodes[-1].duplicate()
+		_snake_add_node(instance)
 
 
 func _init_food():
@@ -132,7 +136,7 @@ func _spawn_food():
 	for node in snake_nodes:
 		excluded.append(grid.position2index(node.position))
 	var candidates = []
-	for i in range(grid.total):
+	for i in range(grid.cell_count):
 		if i not in excluded:
 			candidates.append(i)
 	if candidates.is_empty():
