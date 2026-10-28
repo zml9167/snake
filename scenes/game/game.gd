@@ -212,5 +212,7 @@ func _end_game(reason: String) -> void:
 	is_game_over = true
 	timer.stop()
 	print(reason)
+	get_tree().paused = true
 	await get_tree().create_timer(2).timeout
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
