@@ -9,82 +9,80 @@ const BOOST_SCALE := 0.5        # 按住加速键时的间隔倍率
 const START_LENGTH := 2         # 初始蛇长
 const MAX_QUEUED_DIRECTIONS := 2 # 最多缓存两次转向，避免快速二连转向丢失
 
+@export var food_color: Color = Color(randf(), randf(), randf(), 1.0)
+@export var snake_head_color = Color.BLACK
+@export var snake_body_color = Color.WHITE
+
 @onready var viewport_size = get_viewport().get_visible_rect().size
 @onready var timer: Timer = $Timer
 @onready var snake: Node2D = $Snake
-@onready var food: Node2D = $Food
+@onready var food: Block = $Food
 @onready var line_2d: Line2D = $Line2D
 
-var snake_nodes: Array[MeshInstance2D] = []
-var direction: Vector2 = Vector2.RIGHT
-var direction_queue: Array[Vector2] = []
-var food_node: MeshInstance2D
-var grid: GameGrid
-var is_game_over: bool = false
-var boost: bool = false
+var _snake_nodes: Array[Block]
+var _head_index: int
+var _snake_length: int
+var _direction: Vector2 = Vector2.RIGHT
+var _direction_queue: Array[Vector2] = []
+var _grid: GameGrid
+var _is_game_over: bool = false
+var _start_index: int
+var _last_tail_position: Vector2
 
-var start_index: int
-var mesh: Mesh
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	grid = GameGrid.new()
-	grid.shape.x = Global.config.grid_columns
-	grid.shape.y = Global.config.grid_rows
+func _init_grid() -> void:
+	_grid = GameGrid.new()
+	_grid.shape.x = Global.config.grid_columns
+	_grid.shape.y = Global.config.grid_rows
+	_grid.cell_count = _grid.shape.x * _grid.shape.y
 	var cell_width = viewport_size.x / Global.config.grid_columns
 	var cell_height = viewport_size.y / Global.config.grid_rows
 	if cell_width == cell_height:
-		grid.cell_size = cell_width
-		grid.offset.x = 0
-		grid.offset.y = 0
+		_grid.cell_size = cell_width
+		_grid.offset.x = 0
+		_grid.offset.y = 0
 	elif cell_width < cell_height:
-		grid.cell_size = cell_width
-		grid.offset.x = 0
-		grid.offset.y = (viewport_size.y - grid.cell_size * Global.config.grid_rows) / 2
+		_grid.cell_size = cell_width
+		_grid.offset.x = 0
+		_grid.offset.y = (viewport_size.y - _grid.cell_size * Global.config.grid_rows) / 2
 	else:
-		grid.cell_size = cell_height
-		grid.offset.x = (viewport_size.x - grid.cell_size * Global.config.grid_columns) / 2
-		grid.offset.y = 0
-	grid.size.x = grid.cell_size * Global.config.grid_columns
-	grid.size.y = grid.cell_size * Global.config.grid_rows
+		_grid.cell_size = cell_height
+		_grid.offset.x = (viewport_size.x - _grid.cell_size * Global.config.grid_columns) / 2
+		_grid.offset.y = 0
+	_grid.size.x = _grid.cell_size * Global.config.grid_columns
+	_grid.size.y = _grid.cell_size * Global.config.grid_rows
+
+
+func _ready() -> void:
+	_init_grid()
 	_draw_boundary()
-	grid.cell_count = Global.config.grid_columns * Global.config.grid_rows
-	start_index = grid.position2index(viewport_size / 2)
-	mesh = QuadMesh.new()
-	mesh.size.x = grid.cell_size
-	mesh.size.y = grid.cell_size
-	_spawn_snake()
-	snake_nodes[0].modulate = Color()
+	_init_snake()
 	_init_food()
 	_spawn_food()
 	timer.wait_time = _tick_interval()
 	timer.start()
 
 
-func _physics_process(_delta: float) -> void:
-	if is_game_over:
+func _process(_delta: float) -> void:
+	if _is_game_over:
 		return
 
-	var pressed := Input.is_action_pressed("speed_up")
-	if pressed != boost:
-		boost = pressed
-
 	var interval := _tick_interval()
-	if not is_equal_approx(timer.wait_time, interval):
+	if is_equal_approx(timer.wait_time, interval) == false:
 		timer.wait_time = interval
 
 
 # 当前每步耗时：基础值随蛇长递减，按住加速键再乘倍率，最后夹到下限
 func _tick_interval() -> float:
-	var grown := maxi(snake_nodes.size() - START_LENGTH, 0)
+	var grown := maxi(_snake_length - START_LENGTH, 0)
 	var interval := BASE_INTERVAL - grown * STEP_PER_FOOD
-	if boost:
+	if Input.is_action_pressed("speed_up"):
 		interval *= BOOST_SCALE
 	return maxf(interval, MIN_INTERVAL)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_game_over:
+	if _is_game_over:
 		return
 
 	var requested := Vector2.ZERO
@@ -96,63 +94,102 @@ func _unhandled_input(event: InputEvent) -> void:
 		requested = Vector2.UP
 	elif event.is_action_pressed("move_down"):
 		requested = Vector2.DOWN
-
+	else:
+		return
+	get_viewport().set_input_as_handled()
+	
 	if requested == Vector2.ZERO:
 		return
 
-	var last_direction := direction
-	if not direction_queue.is_empty():
-		last_direction = direction_queue[-1]
+	var last_direction := _direction
+	if not _direction_queue.is_empty():
+		last_direction = _direction_queue[-1]
 	if requested == last_direction or (requested + last_direction).is_zero_approx():
 		return
-	if direction_queue.size() < MAX_QUEUED_DIRECTIONS:
-		direction_queue.push_back(requested)
+	if _direction_queue.size() < MAX_QUEUED_DIRECTIONS:
+		_direction_queue.push_back(requested)
 
 
 func _draw_boundary():
-	line_2d.points = PackedVector2Array([
-		grid.offset, grid.offset + Vector2(grid.size.x, 0),
-		grid.offset + Vector2(grid.size.x, 0) + Vector2(0, grid.size.y),
-		grid.offset + Vector2(0, grid.size.y)
-	])
+	line_2d.add_point(_grid.offset)
+	line_2d.add_point(_grid.offset + Vector2(_grid.size.x, 0))
+	line_2d.add_point(_grid.offset + Vector2(_grid.size.x, 0) + Vector2(0, _grid.size.y))
+	line_2d.add_point(_grid.offset + Vector2(0, _grid.size.y))
+	line_2d.closed = true
 
 
-func _spawn_snake():
-	for i in range(START_LENGTH):
-		_spawn_snake_node(start_index - i)
+func _get_snake_head() -> Block:
+	return _snake_nodes[_head_index]
 
 
-func _snake_add_node(instance: MeshInstance2D):
-	snake.add_child(instance)
-	snake_nodes.append(instance)
+func _get_snake_tail() -> Block:
+	var tail_index = (_head_index + _snake_length - 1) % _snake_nodes.size()
+	return _snake_nodes[tail_index]
 
 
-func _spawn_snake_node(index: int):
-	var instance = MeshInstance2D.new()
-	instance.position = grid.index2position(index)
-	instance.mesh = mesh
-	_snake_add_node(instance)
+func _get_snake(i: int) -> Block:
+	var index = (_head_index + i) % _snake_nodes.size()
+	return _snake_nodes[index]
 
 
-func _snake_grow_up(value: int):
-	for i in range(value):
-		var instance = snake_nodes[-1].duplicate()
-		_snake_add_node(instance)
+func _init_snake():
+	_start_index = _grid.position2index(_grid.offset + _grid.size / 2)
+	_snake_nodes.resize(_grid.cell_count)
+	_snake_nodes[0] = snake.get_child(0)
+	_snake_length = 1
+	var head = _get_snake_head()
+	head.initialize(Vector2(_grid.cell_size, _grid.cell_size))
+	head.position = _grid.index2position(_start_index)
+	head.modulate = snake_head_color
+	snake.show()
+	for i in range(START_LENGTH - 1):
+		_spawn_snake_block(_grid.index2position(_start_index - 1 - i))
+
+
+func _spawn_snake_block(pos: Vector2) -> void:
+	var block = _get_snake_head().duplicate()
+	block.position = pos
+	block.modulate = snake_body_color
+	snake.add_child(block)
+	_snake_nodes[(_head_index + _snake_length) % _snake_nodes.size()] = block
+	_snake_length += 1
+
+
+func _snake_grow_up(length: int) -> void:
+	if length <= 0:
+		return
+	for i in length:
+		_spawn_snake_block(_last_tail_position)
+
+
+func _update_snake_head() -> Block:
+	var head = _get_snake_head()
+	head.modulate = snake_body_color
+	var tail_index = (_head_index + _snake_length - 1) % _snake_nodes.size()
+	_last_tail_position = _snake_nodes[tail_index].position
+	_snake_nodes[tail_index].position = head.position + _direction * _grid.cell_size
+	_head_index -= 1
+	if _head_index < 0:
+		_head_index += _snake_nodes.size()
+	_head_index = _head_index % _snake_nodes.size()
+	_snake_nodes[_head_index] = _snake_nodes[tail_index]
+	_snake_nodes[tail_index] = null
+	head = _get_snake_head()
+	head.modulate = snake_head_color
+	return head
 
 
 func _init_food():
-	food_node = MeshInstance2D.new()
-	food_node.mesh = mesh
-	food.add_child(food_node)
-	food.modulate = Color(randf(), randf(), randf())
+	food.initialize(Vector2(_grid.cell_size, _grid.cell_size)) 
+	food.modulate = food_color
 
 
 func _spawn_food() -> bool:
 	var excluded = []
-	for node in snake_nodes:
-		excluded.append(grid.position2index(node.position))
+	for i in _snake_length:
+		excluded.append(_grid.position2index(_get_snake(i).position))
 	var candidates = []
-	for i in range(grid.cell_count):
+	for i in range(_grid.cell_count):
 		if i not in excluded:
 			candidates.append(i)
 	if candidates.is_empty():
@@ -160,58 +197,55 @@ func _spawn_food() -> bool:
 		return false
 
 	var random = candidates.pick_random()
-	food_node.position = grid.index2position(random)
+	food.position = _grid.index2position(random)
 
 	return true
 
 
 func _on_timer_timeout() -> void:
-	if is_game_over:
+	if _is_game_over:
 		return
 
-	snake_nodes[0].modulate = Color(1,1,1)
-
-	while not direction_queue.is_empty():
-		var next: Vector2 = direction_queue.pop_front()
-		if not (next + direction).is_zero_approx():
-			direction = next
+	while _direction_queue.is_empty() == false:
+		var next: Vector2 = _direction_queue.pop_front()
+		if (next + _direction).is_zero_approx() == false:
+			_direction = next
 			break
-
-	var node = snake_nodes.pop_back()
-	node.position = snake_nodes[0].position + direction * grid.cell_size
-	node.modulate = Color()
-	snake_nodes.push_front(node)
-
-	if food_node.position.is_equal_approx(snake_nodes[0].position):
+	
+	var head = _update_snake_head()
+	if food.position.is_equal_approx(head.position):
 		if not _spawn_food():
 			return
 		_snake_grow_up(1)
 
 	if (
-		node.position.x < grid.offset.x
-		or node.position.x > grid.offset.x + grid.size.x
-		or node.position.y < grid.offset.y
-		or node.position.y > grid.offset.y + grid.size.y
+		head.position.x < _grid.offset.x
+		or head.position.x > _grid.offset.x + _grid.size.x
+		or head.position.y < _grid.offset.y
+		or head.position.y > _grid.offset.y + _grid.size.y
 	):
 		_end_game("end")
-	elif self_collision and _is_head_on_body():
+		return
+
+	if self_collision and _is_head_on_body():
 		_end_game("self collision")
+		return
 
 
 func _is_head_on_body() -> bool:
-	var head_index = grid.position2index(snake_nodes[0].position)
-	for i in range(1, snake_nodes.size()):
-		if grid.position2index(snake_nodes[i].position) == head_index:
+	var head_index = _grid.position2index(_get_snake_head().position)
+	for i in range(1, _snake_length):
+		if _grid.position2index(_get_snake(i).position) == head_index:
 			return true
 	return false
 
 
 func _end_game(reason: String) -> void:
-	if is_game_over:
+	if _is_game_over:
 		return
-	is_game_over = true
-	timer.stop()
 	print(reason)
+	_is_game_over = true
+	timer.stop()
 	get_tree().paused = true
 	await get_tree().create_timer(2).timeout
 	get_tree().paused = false
