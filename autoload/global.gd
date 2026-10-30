@@ -5,7 +5,7 @@ const OPTIONS_PATH = "user://options.cfg"
 @export var config: GameConfig
 
 
-func _init() -> void:
+func _ready() -> void:
 	if config == null:
 		config = GameConfig.new()
 	load_settings()

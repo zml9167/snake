@@ -10,16 +10,6 @@ const START_LENGTH := 2         # 初始蛇长
 const MAX_QUEUED_DIRECTIONS := 2 # 最多缓存两次转向，避免快速二连转向丢失
 const MOVE_THRESHOLD := 0.65
 
-@export var food_color: Color = Color(randf(), randf(), randf(), 1.0)
-@export var snake_head_color = Color.BLACK
-@export var snake_body_color = Color.WHITE
-
-@onready var viewport_size = get_viewport().get_visible_rect().size
-@onready var timer: Timer = $Timer
-@onready var snake: Node2D = $Snake
-@onready var food: Block = $Food
-@onready var line_2d: Line2D = $Line2D
-
 var _snake_nodes: Array[Block]
 var _head_index: int
 var _snake_length: int
@@ -36,6 +26,27 @@ var _last_tail_position: Vector2
 func _init() -> void:
 	_direction_queue.resize(MAX_QUEUED_DIRECTIONS)
 	_direction_queue.fill(Vector2.ZERO)
+
+
+@export var food_color: Color = Color(randf(), randf(), randf(), 1.0)
+@export var snake_head_color = Color.BLACK
+@export var snake_body_color = Color.WHITE
+
+@onready var viewport_size = get_viewport().get_visible_rect().size
+@onready var timer: Timer = $Timer
+@onready var snake: Node2D = $Snake
+@onready var food: Block = $Food
+@onready var line_2d: Line2D = $Line2D
+
+
+func _ready() -> void:
+	_init_grid()
+	_draw_boundary()
+	_init_snake()
+	_init_food()
+	_spawn_food()
+	timer.wait_time = _tick_interval()
+	timer.start()
 
 
 func _init_grid() -> void:
@@ -59,16 +70,6 @@ func _init_grid() -> void:
 		_grid.offset.y = 0
 	_grid.size.x = _grid.cell_size * Global.config.grid_columns
 	_grid.size.y = _grid.cell_size * Global.config.grid_rows
-
-
-func _ready() -> void:
-	_init_grid()
-	_draw_boundary()
-	_init_snake()
-	_init_food()
-	_spawn_food()
-	timer.wait_time = _tick_interval()
-	timer.start()
 
 
 func _process(_delta: float) -> void:
