@@ -1,19 +1,23 @@
 [gd_scene format=3 uid="uid://ggapdd7wwlgi"]
 
 [ext_resource type="Script" uid="uid://b5bo6faghs68r" path="res://scenes/game/game.gd" id="1_sul5r"]
+[ext_resource type="PackedScene" uid="uid://dh4hu4vxqdabs" path="res://scenes/block/block.tscn" id="2_7h61r"]
 
 [node name="Game" type="Node2D" unique_id=1497943344]
 script = ExtResource("1_sul5r")
+self_collision = null
 
 [node name="Timer" type="Timer" parent="." unique_id=1241425371]
-autostart = true
 
 [node name="Line2D" type="Line2D" parent="." unique_id=1344959285]
 closed = true
 width = 2.0
 
-[node name="Food" type="Node2D" parent="." unique_id=1954675432]
+[node name="Food" parent="." unique_id=304048571 instance=ExtResource("2_7h61r")]
 
 [node name="Snake" type="Node2D" parent="." unique_id=57457875]
+visible = false
+
+[node name="Block" parent="Snake" unique_id=1489216460 instance=ExtResource("2_7h61r")]
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

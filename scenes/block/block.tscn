@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://dh4hu4vxqdabs"]
+
+[ext_resource type="Script" uid="uid://couy1t6oxsd8o" path="res://scenes/block/block.gd" id="1_c27ow"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_7mmn7"]
+
+[node name="Block" type="Node2D" unique_id=1489216460]
+script = ExtResource("1_c27ow")
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="." unique_id=1653639311]
+mesh = SubResource("QuadMesh_7mmn7")
+
+[node name="Line2D" type="Line2D" parent="." unique_id=1051061229]
+closed = true
+width = 2.0
+default_color = Color(0, 0, 0, 1)
