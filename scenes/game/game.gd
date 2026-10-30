@@ -25,7 +25,8 @@ var _head_index: int
 var _snake_length: int
 var _direction := Vector2.RIGHT
 var _direction_queue: Array[Vector2]
-var _direction_index: int = -1
+var _dir_write_index: int
+var _dir_read_index: int
 var _grid: GameGrid
 var _is_game_over: bool = false
 var _start_index: int
@@ -34,6 +35,7 @@ var _last_tail_position: Vector2
 
 func _init() -> void:
 	_direction_queue.resize(MAX_QUEUED_DIRECTIONS)
+	_direction_queue.fill(Vector2.ZERO)
 
 
 func _init_grid() -> void:
@@ -85,13 +87,17 @@ func _process(_delta: float) -> void:
 	if abs(requested.y) > MOVE_THRESHOLD: requested.y = roundf(requested.y)
 	else: requested.y = 0.0
 	var last_direction := _direction
-	if _direction_index >= 0:
-		last_direction = _direction_queue[_direction_index]
+	var last_write_index = _dir_write_index - 1
+	if last_write_index < 0:
+		last_write_index += _direction_queue.size()
+	last_write_index  = last_write_index % _direction_queue.size()
+	if not _direction_queue[last_write_index].is_zero_approx():
+		last_direction = _direction_queue[last_write_index]
 	if requested.is_equal_approx(last_direction) or (requested + last_direction).is_zero_approx():
 		return
-	if _direction_index < MAX_QUEUED_DIRECTIONS - 1:
-		_direction_index += 1
-		_direction_queue[_direction_index] = requested
+	if _direction_queue[_dir_write_index].is_zero_approx():
+		_direction_queue[_dir_write_index] = requested
+		_dir_write_index = (_dir_write_index + 1) % _direction_queue.size()
 
 
 # 当前每步耗时：基础值随蛇长递减，按住加速键再乘倍率，最后夹到下限
@@ -199,20 +205,21 @@ func _on_timer_timeout() -> void:
 	if _is_game_over:
 		return
 
-	while _direction_index >= 0:
-		var next: Vector2 = _direction_queue[_direction_index]
-		_direction_index -= 1
+	while not _direction_queue[_dir_read_index].is_zero_approx():
+		var next: Vector2 = _direction_queue[_dir_read_index]
+		_direction_queue[_dir_read_index] = Vector2.ZERO
+		_dir_read_index = (_dir_read_index + 1) % _direction_queue.size()
 		if is_zero_approx(_direction.x) and not is_zero_approx(next.x):
 			_direction = Vector2(next.x, 0)
-		elif is_zero_approx(_direction.y) and not is_zero_approx(next.y):
+			break
+		if is_zero_approx(_direction.y) and not is_zero_approx(next.y):
 			_direction = Vector2(0, next.y)
-		break
-	
+			break
 	var head = _update_snake_head()
 	if food.position.is_equal_approx(head.position):
+		_snake_grow_up(1)
 		if not _spawn_food():
 			return
-		_snake_grow_up(1)
 
 	if (
 		head.position.x < _grid.offset.x
