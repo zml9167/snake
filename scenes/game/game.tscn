@@ -5,7 +5,6 @@
 
 [node name="Game" type="Node2D" unique_id=1497943344]
 script = ExtResource("1_sul5r")
-self_collision = null
 
 [node name="Timer" type="Timer" parent="." unique_id=1241425371]
 

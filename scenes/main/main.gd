@@ -1,9 +1,14 @@
-extends Node
+extends Control
 
 @export var config: GameConfig
 
-@onready var button_group: VBoxContainer = $Control/ButtonGroup
-@onready var options: VBoxContainer = $Control/Options
+@onready var options: VBoxContainer = $Options
+@onready var button_group: VBoxContainer = $ButtonGroup
+@onready var start: Button = $ButtonGroup/Start
+
+
+func _ready() -> void:
+	start.grab_focus()
 
 
 func _on_start_pressed() -> void:

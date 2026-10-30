@@ -8,6 +8,7 @@ const STEP_PER_FOOD := 0.01     # 每吃一个食物缩短的秒数
 const BOOST_SCALE := 0.5        # 按住加速键时的间隔倍率
 const START_LENGTH := 2         # 初始蛇长
 const MAX_QUEUED_DIRECTIONS := 2 # 最多缓存两次转向，避免快速二连转向丢失
+const MOVE_THRESHOLD := 0.65
 
 @export var food_color: Color = Color(randf(), randf(), randf(), 1.0)
 @export var snake_head_color = Color.BLACK
@@ -22,12 +23,17 @@ const MAX_QUEUED_DIRECTIONS := 2 # 最多缓存两次转向，避免快速二连
 var _snake_nodes: Array[Block]
 var _head_index: int
 var _snake_length: int
-var _direction: Vector2 = Vector2.RIGHT
-var _direction_queue: Array[Vector2] = []
+var _direction := Vector2.RIGHT
+var _direction_queue: Array[Vector2]
+var _direction_index: int = -1
 var _grid: GameGrid
 var _is_game_over: bool = false
 var _start_index: int
 var _last_tail_position: Vector2
+
+
+func _init() -> void:
+	_direction_queue.resize(MAX_QUEUED_DIRECTIONS)
 
 
 func _init_grid() -> void:
@@ -68,8 +74,24 @@ func _process(_delta: float) -> void:
 		return
 
 	var interval := _tick_interval()
-	if is_equal_approx(timer.wait_time, interval) == false:
+	if not is_equal_approx(timer.wait_time, interval):
 		timer.wait_time = interval
+
+	var requested: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if requested.is_zero_approx():
+		return
+	if abs(requested.x) > MOVE_THRESHOLD: requested.x = roundf(requested.x)
+	else: requested.x = 0.0
+	if abs(requested.y) > MOVE_THRESHOLD: requested.y = roundf(requested.y)
+	else: requested.y = 0.0
+	var last_direction := _direction
+	if _direction_index >= 0:
+		last_direction = _direction_queue[_direction_index]
+	if requested.is_equal_approx(last_direction) or (requested + last_direction).is_zero_approx():
+		return
+	if _direction_index < MAX_QUEUED_DIRECTIONS - 1:
+		_direction_index += 1
+		_direction_queue[_direction_index] = requested
 
 
 # 当前每步耗时：基础值随蛇长递减，按住加速键再乘倍率，最后夹到下限
@@ -79,35 +101,6 @@ func _tick_interval() -> float:
 	if Input.is_action_pressed("speed_up"):
 		interval *= BOOST_SCALE
 	return maxf(interval, MIN_INTERVAL)
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if _is_game_over:
-		return
-
-	var requested := Vector2.ZERO
-	if event.is_action_pressed("move_left"):
-		requested = Vector2.LEFT
-	elif event.is_action_pressed("move_right"):
-		requested = Vector2.RIGHT
-	elif event.is_action_pressed("move_up"):
-		requested = Vector2.UP
-	elif event.is_action_pressed("move_down"):
-		requested = Vector2.DOWN
-	else:
-		return
-	get_viewport().set_input_as_handled()
-	
-	if requested == Vector2.ZERO:
-		return
-
-	var last_direction := _direction
-	if not _direction_queue.is_empty():
-		last_direction = _direction_queue[-1]
-	if requested == last_direction or (requested + last_direction).is_zero_approx():
-		return
-	if _direction_queue.size() < MAX_QUEUED_DIRECTIONS:
-		_direction_queue.push_back(requested)
 
 
 func _draw_boundary():
@@ -206,11 +199,14 @@ func _on_timer_timeout() -> void:
 	if _is_game_over:
 		return
 
-	while _direction_queue.is_empty() == false:
-		var next: Vector2 = _direction_queue.pop_front()
-		if (next + _direction).is_zero_approx() == false:
-			_direction = next
-			break
+	while _direction_index >= 0:
+		var next: Vector2 = _direction_queue[_direction_index]
+		_direction_index -= 1
+		if is_zero_approx(_direction.x) and not is_zero_approx(next.x):
+			_direction = Vector2(next.x, 0)
+		elif is_zero_approx(_direction.y) and not is_zero_approx(next.y):
+			_direction = Vector2(0, next.y)
+		break
 	
 	var head = _update_snake_head()
 	if food.position.is_equal_approx(head.position):
